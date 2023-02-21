@@ -12,4 +12,12 @@ from torch.autograd import Variable
 import random
 
 lfw_dataset = datasets.LFWPeople('.', download=True)
-print(lfw_dataset)
+
+# Dataset LFWPeople
+#     Number of datapoints: 13233
+#     Root location: .\lfw-py
+#     Alignment: funneled
+#     Split: 10fold
+#     Classes (identities): 5749
+
+train_data, test_data = random_split(lfw_dataset, [10586, 2647])
