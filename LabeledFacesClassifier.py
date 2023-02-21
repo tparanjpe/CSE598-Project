@@ -23,41 +23,118 @@ lfw_dataset = datasets.LFWPeople('.', download=True)
 
 train_data, test_data = random_split(lfw_dataset, [10586, 2647])
 
-# Needs to be updated!!!
-class Model(nn.Module):
+# ---------------------------------------
 
-    def __init__(self):
-        super().__init__()
-        # This is the first Conv layer (sequential with batch norm, max pool, and reLU)
-        self.convLayerSet1 = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3),
-            nn.BatchNorm2d(num_features=32),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.ReLU()
-        )
-                
-        # This is the second Conv layer (sequential with batch norm, max pool, and reLU)
-        self.convLayerSet2 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3),
-            nn.BatchNorm2d(num_features=64),
-            nn.MaxPool2d(kernel_size=2),
-            nn.ReLU()
-        )
+import os
+import gdown
+import tensorflow as tf
+from deepface.commons import functions
 
-        #Linear layers
-        self.linear1 = nn.Linear(in_features=1600, out_features=120)
-        self.linear2 = nn.Linear(in_features=120, out_features=84)
-        self.linear3 = nn.Linear(in_features=84, out_features=10)
-        
-    def forward(self, x):
-        x = self.convLayerSet1(x)
-        x = self.convLayerSet2(x)
-        x = x.view(x.size(0), -1)
-        x = self.linear1(x)
-        x = self.linear2(x)
-        x = self.linear3(x)
-        x = F.log_softmax(x)
-        return x
+# ---------------------------------------
+
+tf_version = int(tf.__version__.split(".", maxsplit=1)[0])
+
+if tf_version == 1:
+    from keras.models import Model, Sequential
+    from keras.layers import (
+        Convolution2D,
+        ZeroPadding2D,
+        MaxPooling2D,
+        Flatten,
+        Dropout,
+        Activation,
+    )
+else:
+    from tensorflow.keras.models import Model, Sequential
+    from tensorflow.keras.layers import (
+        Convolution2D,
+        ZeroPadding2D,
+        MaxPooling2D,
+        Flatten,
+        Dropout,
+        Activation,
+    )
+
+# ---------------------------------------
+
+
+def baseModel():
+    model = Sequential()
+    model.add(ZeroPadding2D((1, 1), input_shape=(224, 224, 3)))
+    model.add(Convolution2D(64, (3, 3), activation="relu"))
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(64, (3, 3), activation="relu"))
+    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(128, (3, 3), activation="relu"))
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(128, (3, 3), activation="relu"))
+    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(256, (3, 3), activation="relu"))
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(256, (3, 3), activation="relu"))
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(256, (3, 3), activation="relu"))
+    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(512, (3, 3), activation="relu"))
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(512, (3, 3), activation="relu"))
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(512, (3, 3), activation="relu"))
+    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(512, (3, 3), activation="relu"))
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(512, (3, 3), activation="relu"))
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(512, (3, 3), activation="relu"))
+    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+
+    model.add(Convolution2D(4096, (7, 7), activation="relu"))
+    model.add(Dropout(0.5))
+    model.add(Convolution2D(4096, (1, 1), activation="relu"))
+    model.add(Dropout(0.5))
+    model.add(Convolution2D(2622, (1, 1)))
+    model.add(Flatten())
+    model.add(Activation("softmax"))
+
+    return model
+
+
+# url = 'https://drive.google.com/uc?id=1CPSeum3HpopfomUEK1gybeuIVoeJT_Eo'
+
+
+def loadModel(
+    url="https://github.com/serengil/deepface_models/releases/download/v1.0/vgg_face_weights.h5",
+):
+
+    model = baseModel()
+
+    # -----------------------------------
+
+    home = functions.get_deepface_home()
+    output = home + "/.deepface/weights/vgg_face_weights.h5"
+
+    if os.path.isfile(output) != True:
+        print("vgg_face_weights.h5 will be downloaded...")
+        gdown.download(url, output, quiet=False)
+
+    # -----------------------------------
+
+    model.load_weights(output)
+
+    # -----------------------------------
+
+    # TO-DO: why?
+    vgg_face_descriptor = Model(inputs=model.layers[0].input, outputs=model.layers[-2].output)
+
+    return vgg_face_descriptor
     
 # define loss function, optimizer and number of epochs
 # train and test to get baseline accuracy
