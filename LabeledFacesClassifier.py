@@ -27,82 +27,70 @@ train_data, test_data = random_split(lfw_dataset, [10586, 2647])
 
 import os
 import gdown
-import tensorflow as tf
 from deepface.commons import functions
-
-# ---------------------------------------
-
-tf_version = int(tf.__version__.split(".", maxsplit=1)[0])
-
-if tf_version == 1:
-    from keras.models import Model, Sequential
-    from keras.layers import (
-        Convolution2D,
-        ZeroPadding2D,
-        MaxPooling2D,
-        Flatten,
-        Dropout,
-        Activation,
-    )
-else:
-    from tensorflow.keras.models import Model, Sequential
-    from tensorflow.keras.layers import (
-        Convolution2D,
-        ZeroPadding2D,
-        MaxPooling2D,
-        Flatten,
-        Dropout,
-        Activation,
-    )
 
 # ---------------------------------------
 
 
 def baseModel():
-    model = Sequential()
-    model.add(ZeroPadding2D((1, 1), input_shape=(224, 224, 3)))
-    model.add(Convolution2D(64, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(64, (3, 3), activation="relu"))
-    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+    model = nn.Sequential(
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(3, 64, (3, 3)),
+            nn.ReLU(),
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(64, 64, (3, 3)),
+            nn.ReLU(),
+            nn.MaxPool2d((2, 2), stride=(2, 2)),
 
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(128, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(128, (3, 3), activation="relu"))
-    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(64, 128, (3, 3)),
+            nn.ReLU(),
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(128, 128, (3, 3)),
+            nn.ReLU(),
+            nn.MaxPool2d((2, 2), stride=(2, 2)),
 
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(256, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(256, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(256, (3, 3), activation="relu"))
-    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(128, 256, (3, 3)),
+            nn.ReLU(),
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(256, 256, (3, 3)),
+            nn.ReLU(),
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(256, 256, (3, 3)),
+            nn.ReLU(),
+            nn.MaxPool2d((2, 2), stride=(2, 2)),
 
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(256, 512, (3, 3)),
+            nn.ReLU(),
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(512, 512, (3, 3)),
+            nn.ReLU(),
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(512, 512, (3, 3)),
+            nn.ReLU(),
+            nn.MaxPool2d((2, 2), stride=(2, 2)),
 
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(512, (3, 3), activation="relu"))
-    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(512, 512, (3, 3)),
+            nn.ReLU(),
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(512, 512, (3, 3)),
+            nn.ReLU(),
+            nn.ZeroPad2d((1, 1)),
+            nn.Conv2d(512, 512, (3, 3)),
+            nn.ReLU(),
+            nn.MaxPool2d((2, 2), stride=(2, 2)),
 
-    model.add(Convolution2D(4096, (7, 7), activation="relu"))
-    model.add(Dropout(0.5))
-    model.add(Convolution2D(4096, (1, 1), activation="relu"))
-    model.add(Dropout(0.5))
-    model.add(Convolution2D(2622, (1, 1)))
-    model.add(Flatten())
-    model.add(Activation("softmax"))
+            nn.Conv2d(512, 4096, (7, 7)),
+            nn.Dropout(p=0.5),
+            nn.Conv2d(4096, 4096, (1, 1)),
+            nn.Dropout(p=0.5),
+            nn.Conv2d(4096, 2622, (1, 1)),
+            nn.Flatten(),
+            nn.Softmax(dim=1)
+        )
 
     return model
 
