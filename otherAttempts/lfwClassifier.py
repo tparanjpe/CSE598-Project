@@ -78,10 +78,6 @@ t0 = time()
 resnet.fit(X_train, y_train)
 print("done in %0.3fs" % (time() - t0))
 
-"""Continue training a model (warm re-start):<br>
-resnet.partial_fit(X_train_s, y_train)
-"""
-
 y_pred = resnet.predict(X_test)
 print(classification_report(y_test, y_pred, target_names=target_names))
 
